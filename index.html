@@ -1,30 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Cloudix S3 Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cloudix File Dashboard</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    h1 { font-size: 26px; }
-    .file-list { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; }
-    .file-item {
-      border: 1px solid #ddd;
-      padding: 10px;
-      border-radius: 6px;
-      width: 200px;
-      word-wrap: break-word;
-      text-align: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 20px;
     }
-    .file-item img {
+    h1 {
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 30px;
+      color: #333;
+    }
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .file-card {
+      background: #fff;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.06);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: 0.2s;
+    }
+    .file-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.08);
+    }
+    .file-card img {
       max-width: 100%;
       height: auto;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+    }
+    .file-link {
+      text-decoration: none;
+      color: #007bff;
+      word-break: break-word;
+      font-size: 14px;
+    }
+    .file-icon {
+      font-size: 48px;
+      color: #aaa;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <h1>Cloudix File Dashboard</h1>
-  <div id="file-list" class="file-list">Loading files...</div>
+  <div id="file-list" class="file-grid">Loading files...</div>
 
   <script>
     const s3BucketBase = "https://cloudix-sharing.s3.ap-southeast-1.amazonaws.com/";
@@ -35,24 +72,30 @@
       .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
       .then(data => {
         const contents = data.getElementsByTagName("Contents");
-        const listContainer = document.getElementById("file-list");
-        listContainer.innerHTML = "";
+        const container = document.getElementById("file-list");
+        container.innerHTML = "";
 
         Array.from(contents).forEach(item => {
           const key = item.getElementsByTagName("Key")[0].textContent;
           const fileUrl = s3BucketBase + encodeURIComponent(key);
           const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(key);
+          const isPdf = /\.pdf$/i.test(key);
+          const isSvg = /\.svg$/i.test(key);
 
-          const div = document.createElement("div");
-          div.className = "file-item";
+          const card = document.createElement("div");
+          card.className = "file-card";
 
           if (isImage) {
-            div.innerHTML = `<img src="${fileUrl}"><a href="${fileUrl}" target="_blank">${key}</a>`;
+            card.innerHTML = `<img src="${fileUrl}" alt="${key}" /><a class="file-link" href="${fileUrl}" target="_blank">${key}</a>`;
+          } else if (isPdf) {
+            card.innerHTML = `<div class="file-icon">📄</div><a class="file-link" href="${fileUrl}" target="_blank">${key}</a>`;
+          } else if (isSvg) {
+            card.innerHTML = `<div class="file-icon">🖍️</div><a class="file-link" href="${fileUrl}" target="_blank">${key}</a>`;
           } else {
-            div.innerHTML = `<a href="${fileUrl}" target="_blank">${key}</a>`;
+            card.innerHTML = `<div class="file-icon">📁</div><a class="file-link" href="${fileUrl}" target="_blank">${key}</a>`;
           }
 
-          listContainer.appendChild(div);
+          container.appendChild(card);
         });
       })
       .catch(err => {
@@ -62,4 +105,3 @@
   </script>
 </body>
 </html>
-
